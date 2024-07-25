@@ -5,7 +5,8 @@ use bevy::prelude::*;
 mod animation;
 pub mod assets;
 pub mod audio;
-mod movement;
+pub mod constants;
+pub mod physics;
 pub mod spawn;
 
 pub(super) fn plugin(app: &mut App) {
@@ -13,7 +14,7 @@ pub(super) fn plugin(app: &mut App) {
         animation::plugin,
         audio::plugin,
         assets::plugin,
-        movement::plugin,
         spawn::plugin,
+        physics::plugin,
     ));
 }
