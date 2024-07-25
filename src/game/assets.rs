@@ -18,6 +18,8 @@ pub(super) fn plugin(app: &mut App) {
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Reflect)]
 pub enum ImageKey {
     Ducky,
+    Player,
+    Bomb,
 }
 
 impl AssetKey for ImageKey {
@@ -27,15 +29,35 @@ impl AssetKey for ImageKey {
 impl FromWorld for HandleMap<ImageKey> {
     fn from_world(world: &mut World) -> Self {
         let asset_server = world.resource::<AssetServer>();
-        [(
-            ImageKey::Ducky,
-            asset_server.load_with_settings(
-                "images/ducky.png",
-                |settings: &mut ImageLoaderSettings| {
-                    settings.sampler = ImageSampler::nearest();
-                },
+        [
+            (
+                ImageKey::Ducky,
+                asset_server.load_with_settings(
+                    "images/ducky.png",
+                    |settings: &mut ImageLoaderSettings| {
+                        settings.sampler = ImageSampler::nearest();
+                    },
+                ),
             ),
-        )]
+            (
+                ImageKey::Player,
+                asset_server.load_with_settings(
+                    "images/sheet.png",
+                    |settings: &mut ImageLoaderSettings| {
+                        settings.sampler = ImageSampler::nearest();
+                    },
+                ),
+            ),
+            (
+                ImageKey::Bomb,
+                asset_server.load_with_settings(
+                    "images/bomb.png",
+                    |settings: &mut ImageLoaderSettings| {
+                        settings.sampler = ImageSampler::nearest();
+                    },
+                ),
+            ),
+        ]
         .into()
     }
 }
@@ -78,7 +100,12 @@ impl FromWorld for HandleMap<SfxKey> {
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Reflect)]
 pub enum SoundtrackKey {
     Credits,
-    Gameplay,
+    GoingIn,
+    Worldwid3,
+    BigM,
+    Izo,
+    Squirrels,
+    Usokoto,
 }
 
 impl AssetKey for SoundtrackKey {
@@ -90,12 +117,28 @@ impl FromWorld for HandleMap<SoundtrackKey> {
         let asset_server = world.resource::<AssetServer>();
         [
             (
-                SoundtrackKey::Credits,
-                asset_server.load("audio/soundtracks/Monkeys Spinning Monkeys.ogg"),
+                SoundtrackKey::GoingIn,
+                asset_server.load("audio/soundtracks/GOING IN.mp3"),
             ),
             (
-                SoundtrackKey::Gameplay,
-                asset_server.load("audio/soundtracks/Fluffing A Duck.ogg"),
+                SoundtrackKey::Worldwid3,
+                asset_server.load("audio/soundtracks/Worldwid3.mp3"),
+            ),
+            (
+                SoundtrackKey::BigM,
+                asset_server.load("audio/soundtracks/BIG MUNITIONS.mp3"),
+            ),
+            (
+                SoundtrackKey::Izo,
+                asset_server.load("audio/soundtracks/IZO.mp3"),
+            ),
+            (
+                SoundtrackKey::Squirrels,
+                asset_server.load("audio/soundtracks/SQUIRRELS.mp3"),
+            ),
+            (
+                SoundtrackKey::Usokoto,
+                asset_server.load("audio/soundtracks/USOKOTO.mp3"),
             ),
         ]
         .into()

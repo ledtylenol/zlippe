@@ -5,5 +5,8 @@
 //! - [Timers](https://github.com/bevyengine/bevy/blob/latest/examples/time/timers.rs)
 
 use bevy::prelude::*;
+use bevy_spritesheet_animation::plugin::SpritesheetAnimationPlugin;
 
-pub(super) fn plugin(app: &mut App) {}
+pub(super) fn plugin(app: &mut App) {
+    app.add_plugins(SpritesheetAnimationPlugin);
+}

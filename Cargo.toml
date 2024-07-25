@@ -5,14 +5,19 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+autodefault = "2.0.0"
 avian2d = "0.1.1"
-bevy = { version = "0.14", features = ["wayland"] }
+bevy = { version = "0.14", features = ["wayland", "mp3"] }
+bevy-inspector-egui = "0.25.1"
+bevy_framepace = "0.17.1"
+bevy_spritesheet_animation = "0.2.0"
 # Disable low-severity logs at compile time for performance.
 log = { version = "0.4", features = [
     "max_level_debug",
     "release_max_level_warn",
 ] }
 rand = "0.8"
+turborand = "0.10.1"
 
 [features]
 default = [
@@ -75,4 +80,3 @@ inherits = "release"
 # Optimize with performance in mind.
 opt-level = 3
 # Keep debug information in the binary.
-strip = "none"

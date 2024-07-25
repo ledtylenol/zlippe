@@ -5,8 +5,10 @@ use bevy::prelude::*;
 mod animation;
 pub mod assets;
 pub mod audio;
+pub mod camera;
 pub mod constants;
 pub mod physics;
+pub mod player;
 pub mod spawn;
 
 pub(super) fn plugin(app: &mut App) {
@@ -16,5 +18,7 @@ pub(super) fn plugin(app: &mut App) {
         assets::plugin,
         spawn::plugin,
         physics::plugin,
+        player::plugin,
+        camera::plugin,
     ));
 }

@@ -1,6 +1,7 @@
 //! The screen state for the main game loop.
 
 use bevy::{input::common_conditions::input_just_pressed, prelude::*};
+use rand::Rng;
 
 use super::Screen;
 use crate::game::{
@@ -20,7 +21,14 @@ pub(super) fn plugin(app: &mut App) {
 
 fn enter_playing(mut commands: Commands) {
     commands.trigger(SpawnLevel);
-    commands.trigger(PlaySoundtrack::Key(SoundtrackKey::Gameplay));
+    let key = match rand::thread_rng().gen_range(0..=3) {
+        0 => SoundtrackKey::GoingIn,
+        1 => SoundtrackKey::Worldwid3,
+        2 => SoundtrackKey::BigM,
+        3 => SoundtrackKey::Izo,
+        _ => unimplemented!(),
+    };
+    commands.trigger(PlaySoundtrack::Key(key));
 }
 
 fn exit_playing(mut commands: Commands) {

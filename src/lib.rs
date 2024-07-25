@@ -10,6 +10,8 @@ use bevy::{
     audio::{AudioPlugin, Volume},
     prelude::*,
 };
+use bevy_framepace::{FramepacePlugin, FramepaceSettings, Limiter};
+use game::camera::PrimaryCamera;
 
 pub struct AppPlugin;
 
@@ -22,7 +24,7 @@ impl Plugin for AppPlugin {
         );
 
         // Spawn the main camera.
-        app.add_systems(Startup, spawn_camera);
+        app.add_systems(Startup, (spawn_camera, setup_framepace));
 
         // Add Bevy plugins.
         app.add_plugins(
@@ -40,6 +42,7 @@ impl Plugin for AppPlugin {
                         canvas: Some("#bevy".to_string()),
                         fit_canvas_to_parent: true,
                         prevent_default_event_handling: true,
+                        present_mode: bevy::window::PresentMode::AutoNoVsync,
                         ..default()
                     }
                     .into(),
@@ -52,6 +55,7 @@ impl Plugin for AppPlugin {
                     ..default()
                 }),
         );
+        app.add_plugins(FramepacePlugin);
 
         // Add other plugins.
         app.add_plugins((game::plugin, screen::plugin, ui::plugin));
@@ -85,6 +89,10 @@ fn spawn_camera(mut commands: Commands) {
         // as we add another camera. This includes indirect ways of adding cameras like using
         // [ui node outlines](https://bevyengine.org/news/bevy-0-14/#ui-node-outline-gizmos)
         // for debugging. So it's good to have this here for future-proofing.
+        PrimaryCamera(Vec3::splat(1.0)),
         IsDefaultUiCamera,
     ));
+}
+fn setup_framepace(mut pace: ResMut<FramepaceSettings>) {
+    pace.limiter = Limiter::from_framerate(120.0);
 }
