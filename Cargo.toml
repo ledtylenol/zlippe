@@ -81,3 +81,5 @@ inherits = "release"
 # Optimize with performance in mind.
 opt-level = 3
 # Keep debug information in the binary.
+[target.'cfg(unix)'.dependencies]
+bevy-inspector-egui = "0.25.1"
