@@ -15,7 +15,7 @@ use crate::{
         assets::{HandleMap, ImageKey},
         camera::YSorted,
         physics::PhysicsLayers,
-        player::{CharacterControllerBundle, Interacter, PlayerDir},
+        player::{CharacterControllerBundle, FootstepSound, Interacter, PlayerDir, PlayerSprite},
     },
     screen::Screen,
 };
@@ -113,22 +113,21 @@ fn spawn_player(
         None,
         None,
     ));
-    let sprite_child = commands
-        .spawn((
-            Name::new("Player Sprite"),
-            TextureAtlas {
-                layout,
-                ..default()
-            },
-            SpriteBundle {
-                texture,
-                ..default()
-            },
-            YSorted::default(),
-            SpritesheetAnimation::from_id(idle_anim_id),
-        ))
-        .id();
-    let interact_child = commands
+    commands.spawn((
+        Name::new("Player Sprite"),
+        TextureAtlas {
+            layout,
+            ..default()
+        },
+        SpriteBundle {
+            texture,
+            ..default()
+        },
+        YSorted::default(),
+        SpritesheetAnimation::from_id(idle_anim_id),
+        PlayerSprite::default(),
+    ));
+    let _interact_child = commands
         .spawn((
             Name::new("Player Interact"),
             Sensor,
@@ -139,7 +138,7 @@ fn spawn_player(
         ))
         .id();
 
-    let parent = commands
+    let _parent = commands
         .spawn((
             Name::new("Player"),
             Player,
@@ -151,11 +150,10 @@ fn spawn_player(
             ),
             SpatialBundle::default(),
             PlayerDir::default(),
+            FootstepSound::default().with_interval(20.0),
         ))
         .id();
     commands.spawn((Name::new("Fixed Fps Track"), FpsTrack::FixedUpdate(0.0)));
     commands.spawn((Name::new("Fps Track"), FpsTrack::Update(0.0)));
-    commands
-        .entity(parent)
-        .push_children(&[sprite_child, interact_child]);
+    // commands.entity(parent).push_children(&[interact_child]);
 }

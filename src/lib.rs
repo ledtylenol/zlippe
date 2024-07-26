@@ -89,7 +89,7 @@ fn spawn_camera(mut commands: Commands) {
         // as we add another camera. This includes indirect ways of adding cameras like using
         // [ui node outlines](https://bevyengine.org/news/bevy-0-14/#ui-node-outline-gizmos)
         // for debugging. So it's good to have this here for future-proofing.
-        PrimaryCamera(Vec3::splat(1.0)),
+        PrimaryCamera(Vec2::ZERO, Vec3::splat(1.0), true),
         IsDefaultUiCamera,
     ));
 }

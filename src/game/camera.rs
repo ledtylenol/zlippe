@@ -1,3 +1,4 @@
+use avian2d::schedule::PhysicsSet;
 use bevy::prelude::*;
 
 use crate::{utils::SmoothNudge, AppSet};
@@ -5,10 +6,16 @@ use crate::{utils::SmoothNudge, AppSet};
 use super::spawn::player::Player;
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(Update, (zoom_camera, y_sort_system).in_set(AppSet::Update))
-        .add_systems(FixedUpdate, follow_player.in_set(AppSet::Update));
+        .add_systems(
+            PostUpdate,
+            (update_target, follow_player)
+                .chain()
+                .before(TransformSystem::TransformPropagate)
+                .after(PhysicsSet::Sync),
+        );
 }
 #[derive(Component, Default)]
-pub struct PrimaryCamera(pub Vec3);
+pub struct PrimaryCamera(pub Vec2, pub Vec3, pub bool);
 #[derive(Component, Default)]
 pub struct YSorted {
     priority: f32,
@@ -30,29 +37,37 @@ fn zoom_camera(
         return;
     };
     if kb.just_pressed(KeyCode::Equal) {
-        cam_zoom.0 *= 0.7;
+        cam_zoom.1 *= 0.7;
     }
     if kb.just_pressed(KeyCode::Minus) {
-        cam_zoom.0 *= 1.3;
+        cam_zoom.1 *= 1.3;
     }
-    cam_zoom.0 = cam_zoom.0.clamp(Vec3::splat(0.01), Vec3::splat(10.0));
-    cam.scale.smooth_nudge(&cam_zoom.0.x, 5.0, dt);
+    if kb.just_pressed(KeyCode::KeyN) {
+        cam_zoom.2 = !cam_zoom.2;
+    }
+    cam_zoom.1 = cam_zoom.1.clamp(Vec3::splat(0.01), Vec3::splat(10.0));
+    cam.scale.smooth_nudge(&cam_zoom.1.x, 5.0, dt);
 }
-fn follow_player(
-    player_q: Query<&Transform, With<Player>>,
-    mut q: Query<&mut Transform, (Without<Player>, With<PrimaryCamera>)>,
-    time: Res<Time>,
-) {
+fn follow_player(mut q: Query<(&mut Transform, &PrimaryCamera), Without<Player>>, time: Res<Time>) {
     let delta = time.delta_seconds();
-    let (Ok(tf), Ok(mut cam_tf)) = (player_q.get_single(), q.get_single_mut()) else {
+    let Ok((mut cam_tf, cam)) = q.get_single_mut() else {
         return;
     };
-    let Vec3 { x, y, .. } = tf.translation;
-    let new_pos = Vec3 {
-        x,
-        y,
-        z: cam_tf.translation.z,
-    };
+
+    if !cam.2 {
+        return;
+    }
+    let new_pos = cam.0.extend(cam_tf.translation.z);
 
     cam_tf.translation.smooth_nudge(&new_pos, 5.0, delta);
+}
+
+fn update_target(
+    mut q: Query<&mut PrimaryCamera, Without<Player>>,
+    player: Query<&Transform, With<Player>>,
+) {
+    let (Ok(mut q), Ok(player)) = (q.get_single_mut(), player.get_single()) else {
+        return;
+    };
+    q.0 = player.translation.xy();
 }

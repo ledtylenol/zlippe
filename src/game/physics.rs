@@ -4,15 +4,12 @@ use bevy::prelude::*;
 
 use super::player::InteractEvents;
 pub(super) fn plugin(app: &mut App) {
-    app.add_plugins((
-        PhysicsPlugins::default().with_length_unit(100.0),
-        // PhysicsDebugPlugin::default(),
-    ))
-    .add_event::<MovementAction>()
-    .add_event::<InteractEvents>()
-    .insert_resource(Gravity(Vec2::splat(0.0)))
-    .register_type::<MovementAcceleration>()
-    .register_type::<Damping>();
+    app.add_plugins((PhysicsPlugins::default().with_length_unit(100.0),))
+        .add_event::<MovementAction>()
+        .add_event::<InteractEvents>()
+        .insert_resource(Gravity(Vec2::splat(0.0)))
+        .register_type::<MovementAcceleration>()
+        .register_type::<Damping>();
 }
 
 /// An event sent for a movement input action.
@@ -20,10 +17,10 @@ pub(super) fn plugin(app: &mut App) {
 pub enum MovementAction {
     Move(Vector),
     Jump,
-    Strafe(Scalar),
 }
 
 #[derive(PhysicsLayer)]
+#[allow(dead_code)]
 pub enum PhysicsLayers {
     World,
     Actor,

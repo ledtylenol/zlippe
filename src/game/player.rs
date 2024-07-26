@@ -1,17 +1,19 @@
 use avian2d::{
     collision::{Collider, CollidingEntities, Sensor},
     dynamics::rigid_body::{LinearVelocity, LockedAxes, RigidBody},
-    math::{AdjustPrecision, Scalar, Vector},
+    math::{Scalar, Vector},
+    schedule::PhysicsSet,
 };
 use bevy::{prelude::*, utils::HashSet};
 use bevy_spritesheet_animation::{component::SpritesheetAnimation, library::SpritesheetLibrary};
 
 use crate::{
-    utils::{get_dir, get_vec, SmoothNudge},
+    utils::{get_vec, SmoothNudge},
     AppSet,
 };
 
 use super::{
+    audio::sfx::PlaySfx,
     constants::{DOWN, LEFT, RIGHT, UP},
     physics::{Damping, MovementAcceleration, MovementAction, MovementBundle},
     spawn::player::Player,
@@ -26,10 +28,22 @@ pub(crate) fn plugin(app: &mut App) {
         Update,
         (keyboard_input, set_dir).in_set(AppSet::RecordInput),
     )
-    .add_systems(FixedUpdate, (movement.in_set(AppSet::Update),));
+    .add_systems(FixedUpdate, movement)
+    .add_systems(
+        PostUpdate,
+        update_player_sprite_transform
+            .before(TransformSystem::TransformPropagate)
+            .after(PhysicsSet::Sync),
+    );
 }
 #[derive(Component)]
 pub struct CharacterController;
+#[derive(Component, Default)]
+#[allow(dead_code)]
+pub struct PlayerSprite(pub Vec2);
+#[derive(Component, Default)]
+pub struct FootstepSound(pub f32, pub f32);
+
 #[derive(Bundle)]
 pub struct CharacterControllerBundle {
     character_controller: CharacterController,
@@ -38,6 +52,21 @@ pub struct CharacterControllerBundle {
     locked_axes: LockedAxes,
     movement: MovementBundle,
 }
+#[derive(Event, Clone, Copy, Debug)]
+#[allow(dead_code)]
+pub enum InteractEvents {
+    Entered(Entity),
+    Exited(Entity),
+    Toggled(Entity),
+}
+#[derive(Component, Deref, DerefMut, Default)]
+pub struct PlayerDir(pub Vec2);
+
+#[derive(Component)]
+pub struct _Sliding;
+
+#[derive(Component, Default, Deref, DerefMut, Debug)]
+pub struct Interacter(HashSet<Entity>);
 
 impl CharacterControllerBundle {
     pub fn new(collider: Collider) -> Self {
@@ -64,17 +93,12 @@ impl CharacterControllerBundle {
         self
     }
 }
-#[derive(Event, Clone, Copy, Debug)]
-pub enum InteractEvents {
-    Entered(Entity),
-    Exited(Entity),
-    Toggled(Entity),
+impl FootstepSound {
+    pub fn with_interval(mut self, interval: f32) -> Self {
+        self.1 = interval;
+        self
+    }
 }
-#[derive(Component, Deref, DerefMut, Default)]
-pub struct PlayerDir(pub Vec2);
-
-#[derive(Component, Default, Deref, DerefMut, Debug)]
-pub struct Interacter(HashSet<Entity>);
 
 impl Interacter {
     fn pop_first(&mut self) -> Option<Entity> {
@@ -101,10 +125,6 @@ fn keyboard_input(
     if kb.just_pressed(KeyCode::Space) {
         movement_event_writer.send(MovementAction::Jump);
     }
-    let strafe = get_dir(&kb, &[KeyCode::KeyQ], &[KeyCode::KeyE]);
-    if !strafe.is_subnormal() {
-        movement_event_writer.send(MovementAction::Strafe(strafe));
-    }
 }
 
 fn set_dir(mut movement_reader: EventReader<MovementAction>, mut player_q: Query<&mut PlayerDir>) {
@@ -120,11 +140,11 @@ fn set_dir(mut movement_reader: EventReader<MovementAction>, mut player_q: Query
 }
 fn update_anim_speed(
     parent_q: Query<&LinearVelocity, With<Player>>,
-    mut children: Query<(&Parent, &mut SpritesheetAnimation, &mut Transform)>,
+    mut children: Query<(&mut SpritesheetAnimation, &mut Transform), With<PlayerSprite>>,
     library: Res<SpritesheetLibrary>,
 ) {
-    for (parent, mut anim, mut tf) in children.iter_mut() {
-        let Ok(LinearVelocity(v)) = parent_q.get(parent.get()) else {
+    for (mut anim, mut tf) in children.iter_mut() {
+        let Ok(LinearVelocity(v)) = parent_q.get_single() else {
             continue;
         };
         use std::cmp::Ordering::*;
@@ -162,6 +182,19 @@ fn update_anim_speed(
             anim.speed_factor = 1.0;
         }
     }
+}
+
+fn update_player_sprite_transform(
+    mut sp_q: Query<&mut Transform, With<PlayerSprite>>,
+    p_q: Query<&Transform, (Without<PlayerSprite>, With<Player>)>,
+) {
+    let (Ok(mut sp_xf), Ok(Transform { translation, .. })) =
+        (sp_q.get_single_mut(), p_q.get_single())
+    else {
+        return;
+    };
+
+    sp_xf.translation = translation.xy().extend(sp_xf.translation.z);
 }
 
 fn interact_system(
@@ -232,20 +265,22 @@ fn interact_event_printer(mut reader: EventReader<InteractEvents>) {
     }
 }
 fn movement(
-    time: Res<Time<Fixed>>,
+    time: Res<Time>,
+    mut commands: Commands,
     mut controllers: Query<
         (
             &MovementAcceleration,
             &mut LinearVelocity,
             Option<&Damping>,
             &PlayerDir,
+            &mut FootstepSound,
         ),
         With<CharacterController>,
     >,
 ) {
     // Precision is adjusted so that the example works with
     // both the `f32` and `f64` features. Otherwise you don't need this.
-    let delta_time = time.delta_seconds_f64().adjust_precision();
+    let delta_time = time.delta_seconds();
 
     for (
         &MovementAcceleration {
@@ -255,11 +290,19 @@ fn movement(
         mut linear_velocity,
         damp,
         &PlayerDir(dir),
+        mut footsteps,
     ) in &mut controllers
     {
         linear_velocity
             .0
             .smooth_nudge(&(dir * max_speed), acceleration, delta_time);
+        if linear_velocity.length() < 300.0 {
+            footsteps.0 += linear_velocity.length() * delta_time;
+        }
+        if footsteps.0 >= footsteps.1 {
+            footsteps.0 = 0.0;
+            commands.trigger(PlaySfx::RandomStep);
+        }
         if let (Some(Damping(damp)), true) = (damp, dir.length() == 0.0) {
             linear_velocity
                 .0

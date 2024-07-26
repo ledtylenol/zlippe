@@ -1,6 +1,7 @@
 //! Development tools for the game. This plugin is only enabled in dev builds.
 
-use avian2d::math::AdjustPrecision;
+#[allow(unused_imports)]
+use avian2d::{debug_render::PhysicsDebugPlugin, math::AdjustPrecision};
 use bevy::{dev_tools::states::log_transitions, prelude::*};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
@@ -10,6 +11,7 @@ pub(super) fn plugin(app: &mut App) {
     // Print state transitions in dev builds
     app.add_systems(Update, (log_transitions::<Screen>, update_reg_track))
         .register_type::<FpsTrack>()
+        // .add_plugins(PhysicsDebugPlugin::default())
         .add_plugins(WorldInspectorPlugin::new());
 }
 #[derive(Component, Reflect)]
