@@ -10,7 +10,6 @@ use bevy_spritesheet_animation::{
 };
 
 use crate::{
-    dev_tools::FpsTrack,
     game::{
         assets::{HandleMap, ImageKey},
         camera::YSorted,
@@ -153,7 +152,5 @@ fn spawn_player(
             FootstepSound::default().with_interval(20.0),
         ))
         .id();
-    commands.spawn((Name::new("Fixed Fps Track"), FpsTrack::FixedUpdate(0.0)));
-    commands.spawn((Name::new("Fps Track"), FpsTrack::Update(0.0)));
     // commands.entity(parent).push_children(&[interact_child]);
 }

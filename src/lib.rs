@@ -11,6 +11,7 @@ use bevy::{
     prelude::*,
 };
 use bevy_framepace::{FramepacePlugin, FramepaceSettings, Limiter};
+#[cfg(feature = "dev")]
 use dev_tools::FpsTrack;
 use game::camera::PrimaryCamera;
 
@@ -28,7 +29,7 @@ impl Plugin for AppPlugin {
         app.add_systems(Startup, (spawn_camera, setup_framepace));
 
         // Add Bevy plugins.
-        app.register_type::<FpsTrack>().add_plugins(
+        app.add_plugins(
             DefaultPlugins
                 .set(AssetPlugin {
                     // Wasm builds will check for meta files (that don't exist) if this isn't set.
@@ -63,7 +64,8 @@ impl Plugin for AppPlugin {
 
         // Enable dev tools for dev builds.
         #[cfg(feature = "dev")]
-        app.add_plugins(dev_tools::plugin);
+        app.add_plugins(dev_tools::plugin)
+            .register_type::<FpsTrack>();
     }
 }
 
