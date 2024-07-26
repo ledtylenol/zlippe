@@ -5399,7 +5399,7 @@ checksum = "791978798f0597cfc70478424c2b4fdc2b7a8024aaff78497ef00f24ef674193"
 
 [[package]]
 name = "zelda-rs"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "autodefault",
  "avian2d",
