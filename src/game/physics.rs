@@ -4,9 +4,10 @@ use bevy::prelude::*;
 
 use super::player::InteractEvents;
 pub(super) fn plugin(app: &mut App) {
-    app.add_plugins((PhysicsPlugins::default().with_length_unit(100.0),))
+    app.add_plugins((PhysicsPlugins::default().with_length_unit(10.0),))
         .add_event::<MovementAction>()
         .add_event::<InteractEvents>()
+        .insert_resource(Time::new_with(Physics::fixed_once_hz(64.0)))
         .insert_resource(Gravity(Vec2::splat(0.0)))
         .register_type::<MovementAcceleration>()
         .register_type::<Damping>();
