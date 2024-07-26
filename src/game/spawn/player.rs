@@ -127,6 +127,7 @@ fn spawn_player(
         YSorted::default(),
         SpritesheetAnimation::from_id(idle_anim_id),
         PlayerSprite::default(),
+        StateScoped(Screen::Playing),
     ));
     let _interact_child = commands
         .spawn((
