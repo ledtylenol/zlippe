@@ -8,10 +8,10 @@ edition = "2021"
 autodefault = "2.0.0"
 avian2d = "0.1.1"
 bevy = { version = "0.14", features = ["wayland", "mp3"] }
-bevy-inspector-egui = "0.25.1"
-bevy_egui = "0.28.0"
 bevy_framepace = "0.17.1"
 bevy_spritesheet_animation = "0.2.0"
+
+
 # Disable low-severity logs at compile time for performance.
 log = { version = "0.4", features = [
     "max_level_debug",
@@ -19,7 +19,6 @@ log = { version = "0.4", features = [
 ] }
 rand = "0.8"
 turborand = "0.10.1"
-
 [features]
 default = [
     # Default to a native dev build.
@@ -54,6 +53,7 @@ type_complexity = "allow"
 [profile.dev]
 opt-level = 1
 
+[profile.dev.native]
 # Enable a large amount of optimization in the dev profile for dependencies.
 [profile.dev.package."*"]
 opt-level = 3
