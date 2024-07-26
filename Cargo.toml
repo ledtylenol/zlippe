@@ -81,5 +81,3 @@ inherits = "release"
 # Optimize with performance in mind.
 opt-level = 3
 # Keep debug information in the binary.
-[build]
-rustflags = ["--cfg=web_sys_unstable_apis"]
